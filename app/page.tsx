@@ -143,6 +143,7 @@ export default function Home() {
   const [copied, setCopied] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [inputError, setInputError] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const labelInputRef = useRef<HTMLInputElement>(null);
 
@@ -186,7 +187,8 @@ export default function Home() {
           createdAt: new Date(s.createdAt).getTime(),
         }));
         setHistory(merged);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        // Clear localStorage after successful sync
+        localStorage.removeItem(STORAGE_KEY);
       }
     } catch {
       // ignore sync errors
@@ -211,8 +213,11 @@ export default function Home() {
   }, [pendingSecret]);
 
   const saveToStorage = useCallback((entries: SecretEntry[]) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-  }, []);
+    // Only save to localStorage if not logged in
+    if (!session?.user) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    }
+  }, [session?.user]);
 
   const addEntry = useCallback((secret: string, label: string) => {
     const exists = history.some((entry) => entry.secret === secret);
@@ -241,6 +246,13 @@ export default function Home() {
 
     const parsed = parseInput(input);
     if (!parsed.secret) return;
+
+    // Validate secret before saving
+    const result = generateTOTP(parsed.secret);
+    if ("error" in result) {
+      setInputError(true);
+      return;
+    }
 
     const exists = history.some((entry) => entry.secret === parsed.secret);
     if (exists) {
@@ -390,10 +402,17 @@ export default function Home() {
               ref={inputRef}
               type="text"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                setInput(e.target.value);
+                if (inputError) setInputError(false);
+              }}
               placeholder="Secret key or otpauth:// URI"
               autoFocus
-              className="mb-4 w-full rounded-lg border border-zinc-200 bg-white px-4 py-3 font-mono text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-600 dark:focus:border-zinc-600"
+              className={`mb-4 w-full rounded-lg border bg-white px-4 py-3 font-mono text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-600 ${
+                inputError
+                  ? "border-red-500 focus:border-red-500 dark:border-red-500 dark:focus:border-red-500"
+                  : "border-zinc-200 focus:border-zinc-400 dark:border-zinc-800 dark:focus:border-zinc-600"
+              }`}
             />
           </form>
         )}
