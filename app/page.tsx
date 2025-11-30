@@ -434,7 +434,6 @@ export default function Home() {
                 if (inputError) setInputError(false);
               }}
               placeholder="Secret key or otpauth:// URI"
-              autoFocus
               className={`mb-4 w-full rounded-lg border bg-white px-4 py-3 font-mono text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-600 ${
                 inputError
                   ? "border-red-500 focus:border-red-500 dark:border-red-500 dark:focus:border-red-500"
