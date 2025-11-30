@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 2FA Now
 
-## Getting Started
+Minimalist TOTP 2FA code generator. Supports secret keys and `otpauth://` URIs with optional cloud sync via GitHub login.
 
-First, run the development server:
+## Features
+
+- Generate 6-digit TOTP codes
+- Auto-detect labels from `otpauth://` URIs
+- Click to copy codes
+- Countdown timer until refresh
+- Local storage (guest) or cloud sync (logged in)
+- Dark mode support
+
+## Tech Stack
+
+Next.js 16 / React 19 / Tailwind CSS / NextAuth.js / Prisma / PostgreSQL
+
+## Setup
+
+### 1. Clone & Install
+
+```bash
+git clone https://github.com/sachnun/2fa-now.git
+cd 2fa-now
+npm install
+```
+
+### 2. Create PostgreSQL Database (Supabase)
+
+1. Go to [supabase.com](https://supabase.com) and create a new project
+2. Navigate to **Settings > Database**
+3. Copy the **Connection string** (URI format)
+4. Replace `[YOUR-PASSWORD]` with your database password
+
+### 3. Create GitHub OAuth App
+
+1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
+2. Click **New OAuth App**
+3. Fill in:
+   - **Application name**: `2FA Now` (or any name)
+   - **Homepage URL**: `http://localhost:3000`
+   - **Authorization callback URL**: `http://localhost:3000/api/auth/callback/github`
+4. Click **Register application**
+5. Copy **Client ID**
+6. Click **Generate a new client secret** and copy it
+
+### 4. Configure Environment Variables
+
+Create `.env` file:
+
+```env
+DATABASE_URL="postgresql://postgres:[PASSWORD]@[HOST]:[PORT]/postgres"
+AUTH_SECRET="your-random-secret-key"
+AUTH_GITHUB_ID="your-github-client-id"
+AUTH_GITHUB_SECRET="your-github-client-secret"
+```
+
+Generate `AUTH_SECRET`:
+```bash
+openssl rand -base64 32
+```
+
+### 5. Initialize Database
+
+```bash
+npx prisma migrate deploy
+npx prisma generate
+```
+
+### 6. Run
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Production Deployment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Update GitHub OAuth App callback URL to your production domain:
+```
+https://yourdomain.com/api/auth/callback/github
+```
 
-## Learn More
+## License
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
