@@ -61,6 +61,44 @@ function generateTOTP(secret: string): { code: string; timeLeft: number } | { er
   }
 }
 
+function TimeLeft() {
+  useCurrentTime();
+  const timeLeft = 30 - (Math.floor(Date.now() / 1000) % 30);
+  const progress = timeLeft / 30;
+  const circumference = 2 * Math.PI * 12;
+  const strokeDashoffset = circumference * (1 - progress);
+  
+  return (
+    <div className="h-8 w-8">
+      <svg className="h-8 w-8 -rotate-90" viewBox="0 0 28 28">
+        <circle
+          cx="14"
+          cy="14"
+          r="12"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="4"
+          className="text-zinc-800 dark:text-zinc-700"
+        />
+        <circle
+          cx="14"
+          cy="14"
+          r="12"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          className={`transition-all duration-1000 ease-linear ${
+            timeLeft <= 5 ? "text-red-500" : "text-zinc-400 dark:text-zinc-300"
+          }`}
+        />
+      </svg>
+    </div>
+  );
+}
+
 function TOTPCard({
   entry,
   onRemove,
@@ -76,7 +114,6 @@ function TOTPCard({
 
   const result = generateTOTP(entry.secret);
   const code = "code" in result ? result.code : "";
-  const timeLeft = "timeLeft" in result ? result.timeLeft : 30;
   const error = "error" in result ? result.error : "";
 
   if (error) {
@@ -101,10 +138,10 @@ function TOTPCard({
   }
 
   return (
-    <div className="group relative rounded-lg bg-zinc-900 p-4 transition-colors dark:bg-zinc-800">
+    <div className="group relative cursor-pointer rounded-lg bg-zinc-900 p-4 transition-colors hover:bg-zinc-800/50 dark:bg-zinc-800 dark:hover:bg-zinc-700/50">
       <button
         onClick={onRemove}
-        className="absolute right-2 top-2 p-1 text-zinc-600 opacity-0 transition-opacity hover:text-zinc-400 group-hover:opacity-100"
+        className="absolute right-2 top-2 cursor-pointer p-1 text-zinc-600 opacity-0 transition-opacity hover:text-zinc-400 group-hover:opacity-100"
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M18 6L6 18M6 6l12 12" />
@@ -112,21 +149,17 @@ function TOTPCard({
       </button>
       <button
         onClick={() => onCopy(code)}
-        className="w-full text-left"
+        className="w-full cursor-pointer text-left"
       >
         <div className="mb-1 text-xs text-zinc-400">{entry.label}</div>
         <div className="font-mono text-2xl font-bold tracking-widest text-white">
           {code.slice(0, 3)} {code.slice(3)}
         </div>
-        <div className="mt-1 flex items-center gap-2 text-xs text-zinc-500">
+        <div className="mt-1 text-xs text-zinc-500">
           {copied ? (
             <span className="text-zinc-400">Copied</span>
           ) : (
-            <>
-              <span className={timeLeft <= 5 ? "text-red-400" : ""}>{timeLeft}s</span>
-              <span>·</span>
-              <span>Click to copy</span>
-            </>
+            <span>Click to copy</span>
           )}
         </div>
       </button>
@@ -314,16 +347,9 @@ export default function Home() {
     return () => clearTimeout(timeout);
   }, [copied]);
 
-  const focusInput = () => {
-    if (!pendingSecret) {
-      inputRef.current?.focus();
-    }
-  };
-
   return (
     <div
       className="relative flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950"
-      onClick={focusInput}
     >
       <div className="bg-texture pointer-events-none absolute inset-0 opacity-[0.03] dark:opacity-[0.04]" />
       
@@ -364,10 +390,11 @@ export default function Home() {
       </div>
 
       <main className="relative w-full max-w-sm px-6 py-12">
-        <h1 className="mb-8 text-center text-4xl font-bold tracking-widest">
+        <h1 className="mb-8 flex items-center justify-center gap-3 text-4xl font-bold tracking-widest">
           <span className="bg-gradient-to-b from-zinc-600 to-zinc-900 bg-clip-text text-transparent dark:from-zinc-200 dark:to-zinc-500">
             2FA
           </span>
+          {mounted && history.length > 0 && <TimeLeft />}
         </h1>
 
         {pendingSecret ? (
