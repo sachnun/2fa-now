@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useSyncExternalStore } from "react";
+import { useState, useEffect, useSyncExternalStore, useRef } from "react";
 import * as OTPAuth from "otpauth";
 
 function useCurrentTime() {
@@ -36,6 +36,7 @@ function generateTOTP(secret: string): { code: string; timeLeft: number } | { er
 export default function Home() {
   const [secret, setSecret] = useState("");
   const [copied, setCopied] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useCurrentTime();
 
@@ -50,6 +51,8 @@ export default function Home() {
     return () => clearTimeout(timeout);
   }, [copied]);
 
+  const focusInput = () => inputRef.current?.focus();
+
   const copyToClipboard = async () => {
     if (code) {
       await navigator.clipboard.writeText(code);
@@ -58,17 +61,25 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950">
-      <main className="w-full max-w-sm px-6">
-        <h1 className="mb-6 text-center text-xl font-semibold text-zinc-900 dark:text-zinc-50">
-          2FA
+    <div
+      className="relative flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950"
+      onClick={focusInput}
+    >
+      <div className="bg-texture pointer-events-none absolute inset-0 opacity-[0.03] dark:opacity-[0.04]" />
+      <main className="relative w-full max-w-sm px-6">
+        <h1 className="mb-8 text-center text-4xl font-bold tracking-widest">
+          <span className="bg-gradient-to-b from-zinc-600 to-zinc-900 bg-clip-text text-transparent dark:from-zinc-200 dark:to-zinc-500">
+            2FA
+          </span>
         </h1>
 
         <input
+          ref={inputRef}
           type="text"
           value={secret}
           onChange={(e) => setSecret(e.target.value)}
           placeholder="Secret key"
+          autoFocus
           className="mb-4 w-full rounded-lg border border-zinc-200 bg-white px-4 py-3 font-mono text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-600 dark:focus:border-zinc-600"
         />
 
