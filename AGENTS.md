@@ -1,24 +1,30 @@
 # AGENTS.md
 
-## Build & Run Commands
-- `npm run dev` - Start development server
-- `npm run build` - Production build
-- `npm run lint` - Run ESLint
+## Commands
+- `npm run dev` - Start dev server
+- `npm run build` - Production build (run before committing)
+- `npm run lint` - ESLint with Next.js rules
+- `npx prisma migrate dev` - Run database migrations
 - No test framework configured
 
-## Code Style Guidelines
+## Code Style
 
-### TypeScript
-- Strict mode enabled; use `import type { X }` for type-only imports
-- Path alias: `@/*` maps to root directory
+### TypeScript & Imports
+- Strict mode; use `import type { X }` for type-only imports
+- Path alias: `@/*` maps to root (e.g., `@/lib/auth`)
+- Group imports: react, external libs, local modules
 
 ### React/Next.js
-- App Router (app/ directory); PascalCase for components
-- Export components as `export default function ComponentName()`
-- Type props with `Readonly<{ children: React.ReactNode }>`
-- Use `next/image` for images, `next/font` for fonts
+- App Router in `app/`; use `"use client"` directive for client components
+- Export: `export default function ComponentName()`
+- Props: `Readonly<{ children: React.ReactNode }>`
+- Inline prop types for component-specific props (no separate interface file)
 
-### Formatting
-- Double quotes for strings; 2-space indentation
-- Tailwind CSS utility classes; use `dark:` prefix for dark mode
-- External links: `target="_blank" rel="noopener noreferrer"`
+### Formatting & Naming
+- Double quotes, 2-space indent; Tailwind for styling with `dark:` variants
+- camelCase functions/variables, PascalCase components, UPPER_CASE constants
+- Interfaces: PascalCase (e.g., `SecretEntry`)
+
+### Error Handling
+- API routes: return `NextResponse.json({ error: "Message" }, { status: code })`
+- Client: use empty catch blocks for non-critical errors, show UI feedback for user-facing errors
