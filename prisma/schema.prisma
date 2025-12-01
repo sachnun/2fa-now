@@ -61,7 +61,7 @@ model VerificationToken {
 model Secret {
   id        String   @id @default(cuid())
   userId    String
-  secret    String
+  secret    String   // Encrypted secret
   label     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
