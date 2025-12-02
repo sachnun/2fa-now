@@ -29,12 +29,11 @@ cd 2fa-now
 npm install
 ```
 
-### 2. Create PostgreSQL Database (Supabase)
+### 2. Create PostgreSQL Database (Neon)
 
-1. Go to [supabase.com](https://supabase.com) and create a new project
-2. Navigate to **Settings > Database**
-3. Copy the **Connection string** (URI format)
-4. Replace `[YOUR-PASSWORD]` with your database password
+1. Go to [neon.tech](https://neon.tech) and create a new project
+2. Navigate to **Dashboard > Connection Details**
+3. Copy the **Connection string** (pooled connection recommended)
 
 ### 3. Create GitHub OAuth App
 
@@ -53,7 +52,7 @@ npm install
 Create `.env` file:
 
 ```env
-DATABASE_URL="postgresql://postgres:[PASSWORD]@[HOST]:[PORT]/postgres"
+DATABASE_URL="postgresql://[USER]:[PASSWORD]@[HOST]/[DATABASE]?sslmode=require"
 AUTH_SECRET="your-random-secret-key"
 AUTH_GITHUB_ID="your-github-client-id"
 AUTH_GITHUB_SECRET="your-github-client-secret"
