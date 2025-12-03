@@ -50,7 +50,7 @@ export async function POST(request: Request) {
         label: item.label,
       },
       create: {
-        userId: session.user.id,
+        user: { connect: { id: session.user.id } },
         secret: item.secret,
         label: item.label,
         createdAt: new Date(item.createdAt),
@@ -71,6 +71,37 @@ export async function POST(request: Request) {
   });
 
   return NextResponse.json(allSecrets);
+}
+
+export async function PATCH(request: Request) {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const body = await request.json();
+  const { secret, label } = body as { secret: string; label: string };
+
+  if (!secret || !label) {
+    return NextResponse.json({ error: "Secret and label required" }, { status: 400 });
+  }
+
+  const updated = await prisma.secret.updateMany({
+    where: {
+      userId: session.user.id,
+      secret: secret,
+    },
+    data: {
+      label: label,
+    },
+  });
+
+  if (updated.count === 0) {
+    return NextResponse.json({ error: "Secret not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({ success: true });
 }
 
 export async function DELETE(request: Request) {
