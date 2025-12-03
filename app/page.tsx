@@ -102,15 +102,46 @@ function TimeLeft() {
 function TOTPCard({
   entry,
   onRemove,
+  onUpdateLabel,
   copied,
   onCopy,
 }: {
   entry: SecretEntry;
   onRemove: () => void;
+  onUpdateLabel: (newLabel: string) => void;
   copied: boolean;
   onCopy: (code: string) => void;
 }) {
   useCurrentTime();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editLabel, setEditLabel] = useState(entry.label);
+  const editInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing) {
+      editInputRef.current?.focus();
+      editInputRef.current?.select();
+    }
+  }, [isEditing]);
+
+  const handleSaveLabel = () => {
+    const trimmed = editLabel.trim();
+    if (trimmed && trimmed !== entry.label) {
+      onUpdateLabel(trimmed);
+    } else {
+      setEditLabel(entry.label);
+    }
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSaveLabel();
+    } else if (e.key === "Escape") {
+      setEditLabel(entry.label);
+      setIsEditing(false);
+    }
+  };
 
   const result = generateTOTP(entry.secret);
   const code = "code" in result ? result.code : "";
@@ -141,7 +172,7 @@ function TOTPCard({
     <div className="group relative cursor-pointer rounded-lg bg-zinc-900 p-4 transition-colors hover:bg-zinc-800/50 dark:bg-zinc-800 dark:hover:bg-zinc-700/50">
       <button
         onClick={onRemove}
-        className="absolute right-2 top-2 cursor-pointer p-1 text-zinc-600 opacity-0 transition-opacity hover:text-zinc-400 group-hover:opacity-100"
+        className="absolute right-2 top-2 cursor-pointer p-1 text-zinc-600 opacity-50 sm:opacity-0 transition-opacity hover:text-zinc-400 sm:group-hover:opacity-100"
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M18 6L6 18M6 6l12 12" />
@@ -151,7 +182,31 @@ function TOTPCard({
         onClick={() => onCopy(code)}
         className="w-full cursor-pointer text-left"
       >
-        <div className="mb-1 text-xs text-zinc-400">{entry.label}</div>
+        {isEditing ? (
+          <input
+            ref={editInputRef}
+            type="text"
+            value={editLabel}
+            onChange={(e) => setEditLabel(e.target.value)}
+            onBlur={handleSaveLabel}
+            onKeyDown={handleKeyDown}
+            onClick={(e) => e.stopPropagation()}
+            className="mb-1 w-full bg-transparent text-xs text-zinc-400 outline-none border-b border-zinc-600 focus:border-zinc-400"
+          />
+        ) : (
+          <div
+            className="mb-1 text-xs text-zinc-400 active:text-zinc-300 hover:text-zinc-300 inline-flex items-center gap-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsEditing(true);
+            }}
+          >
+            {entry.label}
+            <svg className="h-3 w-3 opacity-50 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+            </svg>
+          </div>
+        )}
         <div className="font-mono text-2xl font-bold tracking-widest text-white">
           {code.slice(0, 3)} {code.slice(3)}
         </div>
@@ -341,6 +396,30 @@ export default function Home() {
     setCopied(id);
   };
 
+  const updateLabel = async (id: string, newLabel: string) => {
+    const entry = history.find((e) => e.id === id);
+    if (!entry) return;
+
+    const newHistory = history.map((e) =>
+      e.id === id ? { ...e, label: newLabel } : e
+    );
+    setHistory(newHistory);
+    saveToStorage(newHistory);
+
+    // Update on server if logged in
+    if (session?.user) {
+      try {
+        await fetch("/api/secrets", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ secret: entry.secret, label: newLabel }),
+        });
+      } catch {
+        // ignore
+      }
+    }
+  };
+
   useEffect(() => {
     if (!copied) return;
     const timeout = setTimeout(() => setCopied(null), 1500);
@@ -450,6 +529,7 @@ export default function Home() {
                 key={entry.id}
                 entry={entry}
                 onRemove={() => removeEntry(entry.id)}
+                onUpdateLabel={(newLabel) => updateLabel(entry.id, newLabel)}
                 copied={copied === entry.id}
                 onCopy={(code) => copyToClipboard(code, entry.id)}
               />
