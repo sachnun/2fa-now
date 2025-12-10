@@ -425,6 +425,51 @@ export default function Home() {
     URL.revokeObjectURL(url);
   };
 
+  const importConfig = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        const secrets = data.secrets as { secret: string; label: string; createdAt: number }[];
+        if (!Array.isArray(secrets)) return;
+
+        const existingSecrets = new Set(history.map((h) => h.secret));
+        const newEntries: SecretEntry[] = [];
+
+        for (const s of secrets) {
+          if (!s.secret || existingSecrets.has(s.secret)) continue;
+          const result = generateTOTP(s.secret);
+          if ("error" in result) continue;
+
+          existingSecrets.add(s.secret);
+          newEntries.push({
+            id: crypto.randomUUID(),
+            secret: s.secret,
+            label: s.label || "Imported",
+            createdAt: s.createdAt || Date.now(),
+          });
+        }
+
+        if (newEntries.length > 0) {
+          const newHistory = [...newEntries, ...history];
+          setHistory(newHistory);
+          saveToStorage(newHistory);
+
+          if (session?.user) {
+            syncWithServer(newHistory);
+          }
+        }
+      } catch {}
+    };
+    input.click();
+  };
+
   useEffect(() => {
     if (!copied) return;
     const timeout = setTimeout(() => setCopied(null), 1500);
@@ -436,19 +481,35 @@ export default function Home() {
       <div className="bg-texture pointer-events-none absolute inset-0 opacity-[0.03] dark:opacity-[0.04]" />
       
       <div className="absolute right-4 top-4 z-10 flex items-center gap-2">
-        {mounted && history.length > 0 && (
-          <button
-            onClick={exportConfig}
-            className="flex items-center gap-1.5 rounded-full bg-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-            title="Export config"
-          >
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            Export
-          </button>
+        {mounted && (
+          <>
+            <button
+              onClick={importConfig}
+              className="flex items-center gap-1.5 rounded-full bg-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+              title="Import config"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              Import
+            </button>
+            {history.length > 0 && (
+              <button
+                onClick={exportConfig}
+                className="flex items-center gap-1.5 rounded-full bg-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                title="Export config"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Export
+              </button>
+            )}
+          </>
         )}
         {status === "loading" ? (
           <div className="h-8 w-8 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800" />
