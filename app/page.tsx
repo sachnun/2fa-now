@@ -62,8 +62,8 @@ function generateTOTP(secret: string): { code: string; timeLeft: number } | { er
 }
 
 function TimeLeft() {
-  useCurrentTime();
-  const timeLeft = 30 - (Math.floor(Date.now() / 1000) % 30);
+  const now = useCurrentTime();
+  const timeLeft = 30 - (Math.floor(now / 1000) % 30);
   const progress = timeLeft / 30;
   const circumference = 2 * Math.PI * 12;
   const strokeDashoffset = circumference * (1 - progress);
@@ -235,20 +235,16 @@ export default function Home() {
   const inputRef = useRef<HTMLInputElement>(null);
   const labelInputRef = useRef<HTMLInputElement>(null);
 
-  // Load from localStorage after mount
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
         setHistory(JSON.parse(saved));
-      } catch {
-        // ignore
-      }
+      } catch {}
     }
     setMounted(true);
   }, []);
 
-  // Sync with server when logged in
   const syncWithServer = useCallback(async (localHistory: SecretEntry[]) => {
     if (!session?.user) return;
 
@@ -275,17 +271,13 @@ export default function Home() {
           createdAt: new Date(s.createdAt).getTime(),
         }));
         setHistory(merged);
-        // Clear localStorage after successful sync
         localStorage.removeItem(STORAGE_KEY);
       }
-    } catch {
-      // ignore sync errors
-    } finally {
+    } catch {} finally {
       setSyncing(false);
     }
   }, [session?.user]);
 
-  // Fetch from server on login
   useEffect(() => {
     if (status === "authenticated" && mounted) {
       syncWithServer(history);
@@ -293,7 +285,6 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, mounted]);
 
-  // Focus label input when pending
   useEffect(() => {
     if (pendingSecret && !pendingSecret.label) {
       labelInputRef.current?.focus();
@@ -301,7 +292,6 @@ export default function Home() {
   }, [pendingSecret]);
 
   const saveToStorage = useCallback((entries: SecretEntry[]) => {
-    // Only save to localStorage if not logged in
     if (!session?.user) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
     }
@@ -322,7 +312,6 @@ export default function Home() {
     setHistory(newHistory);
     saveToStorage(newHistory);
 
-    // Sync if logged in
     if (session?.user) {
       syncWithServer(newHistory);
     }
@@ -335,7 +324,6 @@ export default function Home() {
     const parsed = parseInput(input);
     if (!parsed.secret) return;
 
-    // Validate secret before saving
     const result = generateTOTP(parsed.secret);
     if ("error" in result) {
       setInputError(true);
@@ -379,15 +367,12 @@ export default function Home() {
     setHistory(newHistory);
     saveToStorage(newHistory);
 
-    // Delete from server if logged in
     if (session?.user && entry) {
       try {
         await fetch(`/api/secrets?secret=${encodeURIComponent(entry.secret)}`, {
           method: "DELETE",
         });
-      } catch {
-        // ignore
-      }
+      } catch {}
     }
   };
 
@@ -406,7 +391,6 @@ export default function Home() {
     setHistory(newHistory);
     saveToStorage(newHistory);
 
-    // Update on server if logged in
     if (session?.user) {
       try {
         await fetch("/api/secrets", {
@@ -414,10 +398,31 @@ export default function Home() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ secret: entry.secret, label: newLabel }),
         });
-      } catch {
-        // ignore
-      }
+      } catch {}
     }
+  };
+
+  const exportConfig = () => {
+    const exportData = {
+      exported_at: new Date().toISOString(),
+      secrets: history.map((h) => ({
+        secret: h.secret,
+        label: h.label,
+        createdAt: h.createdAt,
+      })),
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `2fa-backup-${new Date().toISOString().split("T")[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   useEffect(() => {
@@ -427,13 +432,24 @@ export default function Home() {
   }, [copied]);
 
   return (
-    <div
-      className="relative flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950"
-    >
+    <div className="relative flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950">
       <div className="bg-texture pointer-events-none absolute inset-0 opacity-[0.03] dark:opacity-[0.04]" />
       
-      {/* Auth button */}
-      <div className="absolute right-4 top-4 z-10">
+      <div className="absolute right-4 top-4 z-10 flex items-center gap-2">
+        {mounted && history.length > 0 && (
+          <button
+            onClick={exportConfig}
+            className="flex items-center gap-1.5 rounded-full bg-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+            title="Export config"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Export
+          </button>
+        )}
         {status === "loading" ? (
           <div className="h-8 w-8 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800" />
         ) : session?.user ? (
