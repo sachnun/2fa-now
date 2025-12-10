@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useSyncExternalStore, useRef, useCallback } from "react";
+import { useState, useEffect, useSyncExternalStore, useRef, useCallback, useMemo } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import * as OTPAuth from "otpauth";
 
@@ -143,7 +143,8 @@ function TOTPCard({
     }
   };
 
-  const result = generateTOTP(entry.secret);
+  const periodKey = Math.floor(Date.now() / 30000);
+  const result = useMemo(() => generateTOTP(entry.secret), [entry.secret, periodKey]);
   const code = "code" in result ? result.code : "";
   const error = "error" in result ? result.error : "";
 
@@ -234,6 +235,7 @@ export default function Home() {
   const [inputError, setInputError] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const labelInputRef = useRef<HTMLInputElement>(null);
+  const localStorageLoadedRef = useRef(false);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -242,6 +244,7 @@ export default function Home() {
         setHistory(JSON.parse(saved));
       } catch {}
     }
+    localStorageLoadedRef.current = true;
     setMounted(true);
   }, []);
 
@@ -278,12 +281,20 @@ export default function Home() {
     }
   }, [session?.user]);
 
+  const historyRef = useRef<SecretEntry[]>([]);
+
   useEffect(() => {
-    if (status === "authenticated" && mounted) {
-      syncWithServer(history);
+    historyRef.current = history;
+  }, [history]);
+
+  useEffect(() => {
+    if (status === "authenticated" && mounted && localStorageLoadedRef.current) {
+      const timer = setTimeout(() => {
+        syncWithServer(historyRef.current);
+      }, 50);
+      return () => clearTimeout(timer);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, mounted]);
+  }, [status, mounted, syncWithServer]);
 
   useEffect(() => {
     if (pendingSecret && !pendingSecret.label) {

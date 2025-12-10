@@ -30,6 +30,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const userId = session.user.id;
+
   const body = await request.json();
   const { secrets } = body as { secrets: { secret: string; label: string; createdAt: number }[] };
 
@@ -37,28 +39,30 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid data" }, { status: 400 });
   }
 
-  for (const item of secrets) {
-    await prisma.secret.upsert({
-      where: {
-        userId_secret: {
-          userId: session.user.id,
-          secret: item.secret,
+  await prisma.$transaction(
+    secrets.map((item) =>
+      prisma.secret.upsert({
+        where: {
+          userId_secret: {
+            userId,
+            secret: item.secret,
+          },
         },
-      },
-      update: {
-        label: item.label,
-      },
-      create: {
-        user: { connect: { id: session.user.id } },
-        secret: item.secret,
-        label: item.label,
-        createdAt: new Date(item.createdAt),
-      },
-    });
-  }
+        update: {
+          label: item.label,
+        },
+        create: {
+          user: { connect: { id: userId } },
+          secret: item.secret,
+          label: item.label,
+          createdAt: new Date(item.createdAt),
+        },
+      })
+    )
+  );
 
   const allSecrets = await prisma.secret.findMany({
-    where: { userId: session.user.id },
+    where: { userId },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
