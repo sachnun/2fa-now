@@ -37,7 +37,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid data" }, { status: 400 });
   }
 
-  // Upsert each secret
   for (const item of secrets) {
     await prisma.secret.upsert({
       where: {
@@ -58,7 +57,6 @@ export async function POST(request: Request) {
     });
   }
 
-  // Return all secrets
   const allSecrets = await prisma.secret.findMany({
     where: { userId: session.user.id },
     orderBy: { createdAt: "desc" },
