@@ -115,6 +115,7 @@ function TOTPCard({
   useCurrentTime();
   const [isEditing, setIsEditing] = useState(false);
   const [editLabel, setEditLabel] = useState(entry.label);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
   const editInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -157,28 +158,72 @@ function TOTPCard({
           </div>
           <div className="text-xs text-red-500">Invalid secret</div>
         </div>
-        <button
-          onClick={onRemove}
-          className="p-2 text-red-400 hover:text-red-600"
-        >
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
-        </button>
+        {deleteConfirm ? (
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-red-500">Delete?</span>
+            <button
+              onClick={() => { setDeleteConfirm(false); onRemove(); }}
+              className="p-1 text-red-500 hover:text-red-600"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 6L9 17l-5-5" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setDeleteConfirm(false)}
+              className="p-1 text-zinc-400 hover:text-zinc-600"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setDeleteConfirm(true)}
+            className="p-2 text-red-400 hover:text-red-600"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        )}
       </div>
     );
   }
 
   return (
     <div className="group relative cursor-pointer rounded-lg bg-zinc-900 p-4 transition-colors hover:bg-zinc-800/50 dark:bg-zinc-800 dark:hover:bg-zinc-700/50">
-      <button
-        onClick={onRemove}
-        className="absolute right-2 top-2 cursor-pointer p-1 text-zinc-600 opacity-50 sm:opacity-0 transition-opacity hover:text-zinc-400 sm:group-hover:opacity-100"
-      >
-        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M18 6L6 18M6 6l12 12" />
-        </svg>
-      </button>
+      {deleteConfirm ? (
+        <div className="absolute right-2 top-2 flex items-center gap-1">
+          <span className="text-xs text-zinc-500">Delete?</span>
+          <button
+            onClick={() => { setDeleteConfirm(false); onRemove(); }}
+            className="p-1 text-red-500 hover:text-red-400"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setDeleteConfirm(false)}
+            className="p-1 text-zinc-500 hover:text-zinc-400"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => setDeleteConfirm(true)}
+          className="absolute right-2 top-2 cursor-pointer p-1 text-zinc-600 opacity-0 transition-opacity hover:text-zinc-400 sm:group-hover:opacity-100"
+        >
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      )}
       <button
         onClick={() => onCopy(code)}
         className="w-full cursor-pointer text-left"
@@ -196,14 +241,14 @@ function TOTPCard({
           />
         ) : (
           <div
-            className="mb-1 text-xs text-zinc-400 active:text-zinc-300 hover:text-zinc-300 inline-flex items-center gap-1"
+            className="group/label mb-1 text-xs text-zinc-400 active:text-zinc-300 hover:text-zinc-300 inline-flex items-center gap-1"
             onClick={(e) => {
               e.stopPropagation();
               setIsEditing(true);
             }}
           >
             {entry.label}
-            <svg className="h-3 w-3 opacity-50 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg className="h-3 w-3 opacity-0 transition-opacity group-hover/label:opacity-100 group-active/label:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
             </svg>
           </div>
@@ -525,24 +570,21 @@ export default function Home() {
         {status === "loading" ? (
           <div className="h-8 w-8 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800" />
         ) : session?.user ? (
-          <div className="flex items-center gap-2">
-            {syncing && (
-              <svg className="h-4 w-4 animate-spin text-zinc-400" viewBox="0 0 24 24" fill="none">
+          <button
+            onClick={() => signOut()}
+            className="flex items-center gap-2 rounded-full bg-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+          >
+            {syncing ? (
+              <svg className="h-5 w-5 animate-spin text-zinc-500" viewBox="0 0 24 24" fill="none">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
-            )}
-            <button
-              onClick={() => signOut()}
-              className="flex items-center gap-2 rounded-full bg-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-            >
-              {session.user.image && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={session.user.image} alt="" className="h-5 w-5 rounded-full" />
-              )}
-              Logout
-            </button>
-          </div>
+            ) : session.user.image ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={session.user.image} alt="" className="h-5 w-5 rounded-full" />
+            ) : null}
+            Logout
+          </button>
         ) : (
           <button
             onClick={() => signIn("github")}
