@@ -84,6 +84,43 @@ function generateTOTP(secret: string): { code: string; timeLeft: number } | { er
   }
 }
 
+const PLACEHOLDERS = [
+  "Secret key",
+  "otpauth:// URI",
+  "Paste QR image",
+];
+
+function AnimatedPlaceholder({ show }: { show: boolean }) {
+  const [index, setIndex] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    if (!show) return;
+    const interval = setInterval(() => {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setIndex((i) => (i + 1) % PLACEHOLDERS.length);
+        setIsAnimating(false);
+      }, 200);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [show]);
+
+  if (!show) return null;
+
+  return (
+    <div className="pointer-events-none absolute inset-0 flex items-center px-4 overflow-hidden">
+      <span
+        className={`font-mono text-sm text-zinc-400 dark:text-zinc-600 transition-all duration-200 ${
+          isAnimating ? "-translate-y-full opacity-0" : "translate-y-0 opacity-100"
+        }`}
+      >
+        {PLACEHOLDERS[index]}
+      </span>
+    </div>
+  );
+}
+
 function TimeLeft() {
   const now = useCurrentTime();
   const timeLeft = 30 - (Math.floor(now / 1000) % 30);
@@ -135,11 +172,15 @@ function TOTPCard({
   copied: boolean;
   onCopy: (code: string) => void;
 }) {
-  useCurrentTime();
+  const now = useCurrentTime();
   const [isEditing, setIsEditing] = useState(false);
   const [editLabel, setEditLabel] = useState(entry.label);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const editInputRef = useRef<HTMLInputElement>(null);
+
+  const periodKey = Math.floor(now / 30000);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const result = useMemo(() => generateTOTP(entry.secret), [entry.secret, periodKey]);
 
   useEffect(() => {
     if (isEditing) {
@@ -166,9 +207,6 @@ function TOTPCard({
       setIsEditing(false);
     }
   };
-
-  const periodKey = Math.floor(Date.now() / 30000);
-  const result = useMemo(() => generateTOTP(entry.secret), [entry.secret, periodKey]);
   const code = "code" in result ? result.code : "";
   const error = "error" in result ? result.error : "";
 
@@ -677,23 +715,25 @@ export default function Home() {
             </div>
           </form>
         ) : (
-          <form onSubmit={handleSubmit}>
-            <input
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                if (inputError) setInputError(false);
-              }}
-              onPaste={handlePaste}
-              placeholder="Secret key, otpauth:// URI, or paste QR image"
-              className={`mb-4 w-full rounded-lg border bg-white px-4 py-3 font-mono text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-600 ${
-                inputError
-                  ? "border-red-500 focus:border-red-500 dark:border-red-500 dark:focus:border-red-500"
-                  : "border-zinc-200 focus:border-zinc-400 dark:border-zinc-800 dark:focus:border-zinc-600"
-              }`}
-            />
+          <form onSubmit={handleSubmit} className="mb-4">
+            <div className="relative">
+              <AnimatedPlaceholder show={!input} />
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  if (inputError) setInputError(false);
+                }}
+                onPaste={handlePaste}
+                className={`w-full rounded-lg border bg-white px-4 py-3 font-mono text-sm text-zinc-900 focus:outline-none dark:bg-zinc-900 dark:text-zinc-100 ${
+                  inputError
+                    ? "border-red-500 focus:border-red-500 dark:border-red-500 dark:focus:border-red-500"
+                    : "border-zinc-200 focus:border-zinc-400 dark:border-zinc-800 dark:focus:border-zinc-600"
+                }`}
+              />
+            </div>
           </form>
         )}
 
