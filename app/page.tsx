@@ -3,6 +3,7 @@
 import { useState, useEffect, useSyncExternalStore, useRef, useCallback, useMemo } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import * as OTPAuth from "otpauth";
+import jsQR from "jsqr";
 
 function useCurrentTime() {
   return useSyncExternalStore(
@@ -22,6 +23,28 @@ interface SecretEntry {
   secret: string;
   label: string;
   createdAt: number;
+}
+
+async function decodeQRFromImage(file: File): Promise<string | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        resolve(null);
+        return;
+      }
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(imageData.data, imageData.width, imageData.height);
+      resolve(code?.data || null);
+    };
+    img.onerror = () => resolve(null);
+    img.src = URL.createObjectURL(file);
+  });
 }
 
 function parseInput(input: string): { secret: string; label: string } {
@@ -373,11 +396,8 @@ export default function Home() {
     }
   }, [history, saveToStorage, session?.user, syncWithServer]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-
-    const parsed = parseInput(input);
+  const processOtpInput = useCallback((inputValue: string) => {
+    const parsed = parseInput(inputValue);
     if (!parsed.secret) return;
 
     const result = generateTOTP(parsed.secret);
@@ -399,6 +419,30 @@ export default function Home() {
       setPendingSecret(parsed);
       setInput("");
     }
+  }, [history, addEntry]);
+
+  const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
+    const items = e.clipboardData.items;
+    for (const item of items) {
+      if (item.type.startsWith("image/")) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (!file) continue;
+        const qrData = await decodeQRFromImage(file);
+        if (qrData) {
+          processOtpInput(qrData);
+        } else {
+          setInputError(true);
+        }
+        return;
+      }
+    }
+  }, [processOtpInput]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    processOtpInput(input);
   };
 
   const handleLabelSubmit = (e: React.FormEvent) => {
@@ -642,7 +686,8 @@ export default function Home() {
                 setInput(e.target.value);
                 if (inputError) setInputError(false);
               }}
-              placeholder="Secret key or otpauth:// URI"
+              onPaste={handlePaste}
+              placeholder="Secret key, otpauth:// URI, or paste QR image"
               className={`mb-4 w-full rounded-lg border bg-white px-4 py-3 font-mono text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-600 ${
                 inputError
                   ? "border-red-500 focus:border-red-500 dark:border-red-500 dark:focus:border-red-500"

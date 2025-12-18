@@ -11,24 +11,25 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
-    "@prisma/client": "^6.19.0",
-    "@types/pg": "^8.15.6",
-    "next": "^16.0.8",
+    "@prisma/client": "^6.19.1",
+    "@types/pg": "^8.16.0",
+    "jsqr": "^1.4.0",
+    "next": "^16.0.10",
     "next-auth": "^5.0.0-beta.30",
     "otpauth": "^9.4.1",
     "pg": "^8.16.3",
-    "prisma": "^6.19.0",
+    "prisma": "^6.19.1",
     "react": "19.2.0",
     "react-dom": "19.2.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/node": "^20.19.27",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.2",
     "eslint-config-next": "16.0.5",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.9.3"
   }
 }
