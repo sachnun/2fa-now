@@ -301,11 +301,9 @@ function TOTPCard({
               }`}
               title={entry.shareToken ? "Sharing active" : "Share OTP"}
             >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="18" cy="5" r="3" />
-                <circle cx="6" cy="12" r="3" />
-                <circle cx="18" cy="19" r="3" />
-                <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" />
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
               </svg>
             </button>
           )}
@@ -855,11 +853,7 @@ export default function Home() {
       {shareModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShareModal(null)}>
           <div className="mx-4 w-full max-w-sm rounded-lg bg-white p-6 dark:bg-zinc-900" onClick={(e) => e.stopPropagation()}>
-            <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100">Share OTP</h2>
-            <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
-              Siapa saja dengan link ini bisa melihat OTP tanpa akses ke secret key.
-            </p>
-            <div className="mb-4 flex items-center gap-2 rounded-lg bg-zinc-100 p-3 dark:bg-zinc-800">
+            <div className="flex items-center gap-2 rounded-lg bg-zinc-100 p-3 dark:bg-zinc-800">
               <input
                 type="text"
                 readOnly
@@ -873,18 +867,18 @@ export default function Home() {
                 {shareCopied ? "Copied" : "Copy"}
               </button>
             </div>
-            <div className="flex gap-2">
+            <div className="mt-3 flex gap-2">
               <button
                 onClick={() => revokeShare(shareModal.id)}
-                className="flex-1 rounded-lg border border-red-500 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
+                className="rounded-lg px-3 py-1.5 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
               >
                 Revoke
               </button>
               <button
                 onClick={() => setShareModal(null)}
-                className="flex-1 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-700 dark:hover:bg-zinc-600"
+                className="flex-1 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-800 dark:bg-zinc-700 dark:hover:bg-zinc-600"
               >
-                Close
+                Done
               </button>
             </div>
           </div>

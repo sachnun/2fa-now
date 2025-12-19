@@ -21,9 +21,9 @@ export default function SharePage({ params }: { params: Promise<{ token: string 
       const res = await fetch(`/api/share/${token}`);
       if (!res.ok) {
         if (res.status === 404) {
-          setError("Share link tidak valid atau sudah di-revoke");
+          setError("Share link is invalid or has been revoked");
         } else {
-          setError("Gagal mengambil OTP");
+          setError("Failed to fetch OTP");
         }
         return;
       }
@@ -32,7 +32,7 @@ export default function SharePage({ params }: { params: Promise<{ token: string 
       setTimeLeft(json.timeLeft);
       setError(null);
     } catch {
-      setError("Gagal mengambil OTP");
+      setError("Failed to fetch OTP");
     } finally {
       setLoading(false);
     }
