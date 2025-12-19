@@ -159,9 +159,7 @@ export default function SharePage({ params }: { params: Promise<{ token: string 
           </div>
         </button>
 
-        <p className="mt-6 text-center text-xs text-zinc-500">
-          OTP akan diperbarui otomatis setiap 30 detik
-        </p>
+
       </main>
     </div>
   );
