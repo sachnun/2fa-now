@@ -17,10 +17,23 @@ export async function GET() {
       secret: true,
       label: true,
       createdAt: true,
+      share: {
+        select: {
+          token: true,
+        },
+      },
     },
   });
 
-  return NextResponse.json(secrets);
+  const result = secrets.map((s) => ({
+    id: s.id,
+    secret: s.secret,
+    label: s.label,
+    createdAt: s.createdAt,
+    shareToken: s.share?.token || null,
+  }));
+
+  return NextResponse.json(result);
 }
 
 export async function POST(request: Request) {
@@ -69,10 +82,23 @@ export async function POST(request: Request) {
       secret: true,
       label: true,
       createdAt: true,
+      share: {
+        select: {
+          token: true,
+        },
+      },
     },
   });
 
-  return NextResponse.json(allSecrets);
+  const result = allSecrets.map((s) => ({
+    id: s.id,
+    secret: s.secret,
+    label: s.label,
+    createdAt: s.createdAt,
+    shareToken: s.share?.token || null,
+  }));
+
+  return NextResponse.json(result);
 }
 
 export async function PATCH(request: Request) {
