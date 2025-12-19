@@ -23,6 +23,7 @@ interface SecretEntry {
   secret: string;
   label: string;
   createdAt: number;
+  shareToken?: string | null;
 }
 
 async function decodeQRFromImage(file: File): Promise<string | null> {
@@ -165,12 +166,18 @@ function TOTPCard({
   onUpdateLabel,
   copied,
   onCopy,
+  onShare,
+  onRevokeShare,
+  isLoggedIn,
 }: {
   entry: SecretEntry;
   onRemove: () => void;
   onUpdateLabel: (newLabel: string) => void;
   copied: boolean;
   onCopy: (code: string) => void;
+  onShare: () => void;
+  onRevokeShare: () => void;
+  isLoggedIn: boolean;
 }) {
   const now = useCurrentTime();
   const [isEditing, setIsEditing] = useState(false);
@@ -276,14 +283,41 @@ function TOTPCard({
           </button>
         </div>
       ) : (
-        <button
-          onClick={() => setDeleteConfirm(true)}
-          className="absolute right-2 top-2 cursor-pointer p-1 text-zinc-600 opacity-0 transition-opacity hover:text-zinc-400 sm:group-hover:opacity-100"
-        >
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
-        </button>
+        <div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 transition-opacity sm:group-hover:opacity-100">
+          {isLoggedIn && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (entry.shareToken) {
+                  onRevokeShare();
+                } else {
+                  onShare();
+                }
+              }}
+              className={`cursor-pointer p-1 transition-colors ${
+                entry.shareToken
+                  ? "text-green-500 hover:text-green-400"
+                  : "text-zinc-600 hover:text-zinc-400"
+              }`}
+              title={entry.shareToken ? "Sharing active" : "Share OTP"}
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="18" cy="5" r="3" />
+                <circle cx="6" cy="12" r="3" />
+                <circle cx="18" cy="19" r="3" />
+                <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" />
+              </svg>
+            </button>
+          )}
+          <button
+            onClick={() => setDeleteConfirm(true)}
+            className="cursor-pointer p-1 text-zinc-600 hover:text-zinc-400"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
       )}
       <button
         onClick={() => onCopy(code)}
@@ -373,11 +407,12 @@ export default function Home() {
 
       if (res.ok) {
         const serverSecrets = await res.json();
-        const merged: SecretEntry[] = serverSecrets.map((s: { id: string; secret: string; label: string; createdAt: string }) => ({
+        const merged: SecretEntry[] = serverSecrets.map((s: { id: string; secret: string; label: string; createdAt: string; shareToken?: string | null }) => ({
           id: s.id,
           secret: s.secret,
           label: s.label,
           createdAt: new Date(s.createdAt).getTime(),
+          shareToken: s.shareToken,
         }));
         setHistory(merged);
         localStorage.removeItem(STORAGE_KEY);
@@ -538,6 +573,55 @@ export default function Home() {
         });
       } catch {}
     }
+  };
+
+  const [shareModal, setShareModal] = useState<{ id: string; token: string } | null>(null);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
+
+  const createShare = async (id: string) => {
+    setShareLoading(true);
+    try {
+      const res = await fetch(`/api/secrets/${id}/share`, { method: "POST" });
+      if (res.ok) {
+        const { token } = await res.json();
+        setHistory((prev) =>
+          prev.map((e) => (e.id === id ? { ...e, shareToken: token } : e))
+        );
+        setShareModal({ id, token });
+      }
+    } catch {} finally {
+      setShareLoading(false);
+    }
+  };
+
+  const revokeShare = async (id: string) => {
+    try {
+      const res = await fetch(`/api/secrets/${id}/share`, { method: "DELETE" });
+      if (res.ok) {
+        setHistory((prev) =>
+          prev.map((e) => (e.id === id ? { ...e, shareToken: null } : e))
+        );
+        setShareModal(null);
+      }
+    } catch {}
+  };
+
+  const openShareModal = (id: string) => {
+    const entry = history.find((e) => e.id === id);
+    if (entry?.shareToken) {
+      setShareModal({ id, token: entry.shareToken });
+    } else {
+      createShare(id);
+    }
+  };
+
+  const copyShareLink = async () => {
+    if (!shareModal) return;
+    const url = `${window.location.origin}/share/${shareModal.token}`;
+    await navigator.clipboard.writeText(url);
+    setShareCopied(true);
+    setTimeout(() => setShareCopied(false), 1500);
   };
 
   const exportConfig = () => {
@@ -747,6 +831,9 @@ export default function Home() {
                 onUpdateLabel={(newLabel) => updateLabel(entry.id, newLabel)}
                 copied={copied === entry.id}
                 onCopy={(code) => copyToClipboard(code, entry.id)}
+                onShare={() => openShareModal(entry.id)}
+                onRevokeShare={() => revokeShare(entry.id)}
+                isLoggedIn={!!session?.user}
               />
             ))}
 
@@ -764,6 +851,51 @@ export default function Home() {
           </div>
         )}
       </main>
+
+      {shareModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShareModal(null)}>
+          <div className="mx-4 w-full max-w-sm rounded-lg bg-white p-6 dark:bg-zinc-900" onClick={(e) => e.stopPropagation()}>
+            <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100">Share OTP</h2>
+            <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+              Siapa saja dengan link ini bisa melihat OTP tanpa akses ke secret key.
+            </p>
+            <div className="mb-4 flex items-center gap-2 rounded-lg bg-zinc-100 p-3 dark:bg-zinc-800">
+              <input
+                type="text"
+                readOnly
+                value={`${typeof window !== "undefined" ? window.location.origin : ""}/share/${shareModal.token}`}
+                className="flex-1 bg-transparent text-xs text-zinc-700 outline-none dark:text-zinc-300"
+              />
+              <button
+                onClick={copyShareLink}
+                className="rounded bg-zinc-200 px-2 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600"
+              >
+                {shareCopied ? "Copied" : "Copy"}
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => revokeShare(shareModal.id)}
+                className="flex-1 rounded-lg border border-red-500 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
+              >
+                Revoke
+              </button>
+              <button
+                onClick={() => setShareModal(null)}
+                className="flex-1 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-700 dark:hover:bg-zinc-600"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {shareLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600" />
+        </div>
+      )}
     </div>
   );
 }
