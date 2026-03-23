@@ -110,7 +110,7 @@ function AnimatedPlaceholder({ show }: { show: boolean }) {
   if (!show) return null;
 
   return (
-    <div className="pointer-events-none absolute inset-0 flex items-center px-4 overflow-hidden">
+    <div className="pointer-events-none absolute inset-0 flex items-center px-3 overflow-hidden">
       <span
         className={`font-mono text-sm text-zinc-400 dark:text-zinc-600 transition-all duration-200 ${
           isAnimating ? "-translate-y-full opacity-0" : "translate-y-0 opacity-100"
@@ -219,7 +219,7 @@ function TOTPCard({
 
   if (error) {
     return (
-      <div className="flex items-center justify-between rounded-lg bg-red-50 p-4 dark:bg-red-950/30">
+      <div className="flex items-center justify-between rounded-xl bg-red-50 p-3 dark:bg-red-950/30">
         <div>
           <div className="text-sm font-medium text-red-600 dark:text-red-400">
             {entry.label}
@@ -261,9 +261,9 @@ function TOTPCard({
   }
 
   return (
-    <div className="group relative cursor-pointer rounded-lg bg-zinc-900 p-4 transition-colors hover:bg-zinc-800/50 dark:bg-zinc-800 dark:hover:bg-zinc-700/50">
+    <div className="group relative cursor-pointer rounded-xl border border-zinc-800/50 bg-zinc-900 p-3 transition-all duration-200 hover:border-zinc-700 hover:bg-zinc-800/80 active:scale-[0.98] dark:bg-zinc-800/80 dark:hover:bg-zinc-700/60">
       {deleteConfirm ? (
-        <div className="absolute right-2 top-2 flex items-center gap-1">
+        <div className="absolute right-2 top-2 flex items-center gap-1 z-10">
           <span className="text-xs text-zinc-500">Delete?</span>
           <button
             onClick={() => { setDeleteConfirm(false); onRemove(); }}
@@ -283,7 +283,7 @@ function TOTPCard({
           </button>
         </div>
       ) : (
-        <div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 transition-opacity sm:group-hover:opacity-100">
+        <div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 transition-opacity sm:group-hover:opacity-100 z-10">
           {isLoggedIn && (
             <button
               onClick={(e) => {
@@ -301,7 +301,7 @@ function TOTPCard({
               }`}
               title={entry.shareToken ? "Sharing active" : "Share OTP"}
             >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
               </svg>
@@ -311,7 +311,7 @@ function TOTPCard({
             onClick={() => setDeleteConfirm(true)}
             className="cursor-pointer p-1 text-zinc-600 hover:text-zinc-400"
           >
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M18 6L6 18M6 6l12 12" />
             </svg>
           </button>
@@ -334,14 +334,14 @@ function TOTPCard({
           />
         ) : (
           <div
-            className="group/label mb-1 text-xs text-zinc-400 active:text-zinc-300 hover:text-zinc-300 inline-flex items-center gap-1"
+            className="group/label mb-0.5 text-xs text-zinc-500 active:text-zinc-300 hover:text-zinc-300 inline-flex items-center gap-1 truncate max-w-[80%]"
             onClick={(e) => {
               e.stopPropagation();
               setIsEditing(true);
             }}
           >
-            {entry.label}
-            <svg className="h-3 w-3 opacity-0 transition-opacity group-hover/label:opacity-100 group-active/label:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <span className="truncate">{entry.label}</span>
+            <svg className="h-2.5 w-2.5 shrink-0 opacity-0 transition-opacity group-hover/label:opacity-100 group-active/label:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
             </svg>
           </div>
@@ -349,13 +349,9 @@ function TOTPCard({
         <div className="font-mono text-2xl font-bold tracking-widest text-white">
           {code.slice(0, 3)} {code.slice(3)}
         </div>
-        <div className="mt-1 text-xs text-zinc-500">
-          {copied ? (
-            <span className="text-zinc-400">Copied</span>
-          ) : (
-            <span>Click to copy</span>
-          )}
-        </div>
+        {copied && (
+          <div className="mt-0.5 text-xs text-zinc-400">Copied</div>
+        )}
       </button>
     </div>
   );
@@ -697,162 +693,181 @@ export default function Home() {
   }, [copied]);
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950">
-      <div className="bg-texture pointer-events-none absolute inset-0 opacity-[0.03] dark:opacity-[0.04]" />
-      
-      <div className="absolute right-4 top-4 z-10 flex items-center gap-2">
-        {mounted && (
-          <>
-            <button
-              onClick={importConfig}
-              className="flex items-center gap-1.5 rounded-full bg-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-              title="Import config"
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="17 8 12 3 7 8" />
-                <line x1="12" y1="3" x2="12" y2="15" />
-              </svg>
-              Import
-            </button>
-            {history.length > 0 && (
+    <div className="relative min-h-screen bg-zinc-50 dark:bg-zinc-950">
+      <div className="bg-texture pointer-events-none fixed inset-0 opacity-[0.03] dark:opacity-[0.04]" />
+
+      {/* Sticky Header Bar */}
+      <header className="sticky top-0 z-30 border-b border-zinc-200 bg-zinc-50/80 backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-950/80">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
+          {/* Logo + Timer */}
+          <div className="flex shrink-0 items-center gap-2">
+            <h1 className="text-lg font-bold tracking-widest">
+              <span className="bg-gradient-to-b from-zinc-600 to-zinc-900 bg-clip-text text-transparent dark:from-zinc-200 dark:to-zinc-500">
+                2FA
+              </span>
+            </h1>
+            {mounted && history.length > 0 && <TimeLeft />}
+          </div>
+
+          {/* Input Field */}
+          <div className="relative min-w-0 flex-1">
+            {pendingSecret ? (
+              <form onSubmit={handleLabelSubmit} className="flex items-center gap-2">
+                <div className="relative min-w-0 flex-1">
+                  <input
+                    ref={labelInputRef}
+                    type="text"
+                    value={labelInput}
+                    onChange={(e) => setLabelInput(e.target.value)}
+                    placeholder="Name (e.g. GitHub, Google)"
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-600 dark:focus:border-zinc-600"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="shrink-0 rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-700 dark:hover:bg-zinc-600"
+                >
+                  Add
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelPending}
+                  className="shrink-0 rounded-lg px-2 py-2 text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+                >
+                  Cancel
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleSubmit}>
+                <div className="relative">
+                  <AnimatedPlaceholder show={!input} />
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={input}
+                    onChange={(e) => {
+                      setInput(e.target.value);
+                      if (inputError) setInputError(false);
+                    }}
+                    onPaste={handlePaste}
+                    className={`w-full rounded-lg border bg-white px-3 py-2 font-mono text-sm text-zinc-900 focus:outline-none dark:bg-zinc-900 dark:text-zinc-100 ${
+                      inputError
+                        ? "border-red-500 focus:border-red-500 dark:border-red-500 dark:focus:border-red-500"
+                        : "border-zinc-200 focus:border-zinc-400 dark:border-zinc-700 dark:focus:border-zinc-600"
+                    }`}
+                  />
+                </div>
+              </form>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex shrink-0 items-center gap-1.5">
+            {mounted && (
+              <>
+                <button
+                  onClick={importConfig}
+                  className="flex items-center gap-1 rounded-lg p-2 text-zinc-500 transition-colors hover:bg-zinc-200 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                  title="Import"
+                >
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                  <span className="hidden text-xs font-medium sm:inline">Import</span>
+                </button>
+                {history.length > 0 && (
+                  <button
+                    onClick={exportConfig}
+                    className="flex items-center gap-1 rounded-lg p-2 text-zinc-500 transition-colors hover:bg-zinc-200 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                    title="Export"
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    <span className="hidden text-xs font-medium sm:inline">Export</span>
+                  </button>
+                )}
+              </>
+            )}
+            {status === "loading" ? (
+              <div className="h-8 w-8 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800" />
+            ) : session?.user ? (
               <button
-                onClick={exportConfig}
-                className="flex items-center gap-1.5 rounded-full bg-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                title="Export config"
+                onClick={() => signOut()}
+                className="flex items-center gap-1.5 rounded-lg p-2 text-zinc-500 transition-colors hover:bg-zinc-200 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
               >
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
+                {syncing ? (
+                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                ) : session.user.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={session.user.image} alt="" className="h-5 w-5 rounded-full" />
+                ) : null}
+                <span className="hidden text-xs font-medium sm:inline">Logout</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => signIn("github")}
+                className="flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
                 </svg>
-                Export
+                <span className="hidden sm:inline">Login</span>
               </button>
             )}
-          </>
-        )}
-        {status === "loading" ? (
-          <div className="h-8 w-8 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800" />
-        ) : session?.user ? (
-          <button
-            onClick={() => signOut()}
-            className="flex items-center gap-2 rounded-full bg-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-          >
-            {syncing ? (
-              <svg className="h-5 w-5 animate-spin text-zinc-500" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-            ) : session.user.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={session.user.image} alt="" className="h-5 w-5 rounded-full" />
-            ) : null}
-            Logout
-          </button>
-        ) : (
-          <button
-            onClick={() => signIn("github")}
-            className="flex items-center gap-2 rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700"
-          >
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-            </svg>
-            Login
-          </button>
-        )}
-      </div>
+          </div>
+        </div>
+      </header>
 
-      <main className="relative w-full max-w-sm px-6 py-12">
-        <h1 className="mb-8 flex items-center justify-center gap-3 text-4xl font-bold tracking-widest">
-          <span className="bg-gradient-to-b from-zinc-600 to-zinc-900 bg-clip-text text-transparent dark:from-zinc-200 dark:to-zinc-500">
-            2FA
-          </span>
-          {mounted && history.length > 0 && <TimeLeft />}
-        </h1>
-
-        {pendingSecret ? (
-          <form onSubmit={handleLabelSubmit} className="mb-4">
-            <input
-              ref={labelInputRef}
-              type="text"
-              value={labelInput}
-              onChange={(e) => setLabelInput(e.target.value)}
-              placeholder="Name (e.g. GitHub, Google)"
-              className="mb-2 w-full rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-600 dark:focus:border-zinc-600"
-            />
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                className="flex-1 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-700 dark:hover:bg-zinc-600"
-              >
-                Add
-              </button>
-              <button
-                type="button"
-                onClick={cancelPending}
-                className="rounded-lg px-4 py-2 text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        ) : (
-          <form onSubmit={handleSubmit} className="mb-4">
-            <div className="relative">
-              <AnimatedPlaceholder show={!input} />
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={(e) => {
-                  setInput(e.target.value);
-                  if (inputError) setInputError(false);
-                }}
-                onPaste={handlePaste}
-                className={`w-full rounded-lg border bg-white px-4 py-3 font-mono text-sm text-zinc-900 focus:outline-none dark:bg-zinc-900 dark:text-zinc-100 ${
-                  inputError
-                    ? "border-red-500 focus:border-red-500 dark:border-red-500 dark:focus:border-red-500"
-                    : "border-zinc-200 focus:border-zinc-400 dark:border-zinc-800 dark:focus:border-zinc-600"
-                }`}
-              />
-            </div>
-          </form>
-        )}
-
+      {/* Main Content: Responsive Grid */}
+      <main className="relative mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
         {mounted && (
-          <div className="space-y-3">
-            {history.map((entry) => (
-              <TOTPCard
-                key={entry.id}
-                entry={entry}
-                onRemove={() => removeEntry(entry.id)}
-                onUpdateLabel={(newLabel) => updateLabel(entry.id, newLabel)}
-                copied={copied === entry.id}
-                onCopy={(code) => copyToClipboard(code, entry.id)}
-                onShare={() => openShareModal(entry.id)}
-                onRevokeShare={() => revokeShare(entry.id)}
-                isLoggedIn={!!session?.user}
-              />
-            ))}
-
-            {history.length === 0 && !pendingSecret && (
-              <div className="flex justify-center py-8">
+          <>
+            {history.length > 0 ? (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {history.map((entry) => (
+                  <TOTPCard
+                    key={entry.id}
+                    entry={entry}
+                    onRemove={() => removeEntry(entry.id)}
+                    onUpdateLabel={(newLabel) => updateLabel(entry.id, newLabel)}
+                    copied={copied === entry.id}
+                    onCopy={(code) => copyToClipboard(code, entry.id)}
+                    onShare={() => openShareModal(entry.id)}
+                    onRevokeShare={() => revokeShare(entry.id)}
+                    isLoggedIn={!!session?.user}
+                  />
+                ))}
+              </div>
+            ) : !pendingSecret && (
+              <div className="flex flex-col items-center justify-center py-24 text-center">
                 <svg
-                  className="h-8 w-8 text-zinc-300 dark:text-zinc-700"
+                  className="mb-4 h-12 w-12 text-zinc-300 dark:text-zinc-700"
                   viewBox="0 0 24 24"
                   fill="currentColor"
                 >
                   <path d="M12 1C8.676 1 6 3.676 6 7v2H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V10a1 1 0 0 0-1-1h-2V7c0-3.324-2.676-6-6-6zm0 2c2.276 0 4 1.724 4 4v2H8V7c0-2.276 1.724-4 4-4zm0 10a2 2 0 0 1 1 3.732V18a1 1 0 1 1-2 0v-1.268A2 2 0 0 1 12 13z" />
                 </svg>
+                <p className="text-sm text-zinc-400 dark:text-zinc-600">
+                  Paste a secret key or otpauth:// URI above to get started
+                </p>
               </div>
             )}
-          </div>
+          </>
         )}
       </main>
 
+      {/* Share Modal */}
       {shareModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShareModal(null)}>
-          <div className="mx-4 w-full max-w-sm rounded-lg bg-white p-6 dark:bg-zinc-900" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShareModal(null)}>
+          <div className="mx-4 w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl dark:bg-zinc-900" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 rounded-lg bg-zinc-100 p-3 dark:bg-zinc-800">
               <input
                 type="text"
@@ -885,8 +900,9 @@ export default function Home() {
         </div>
       )}
 
+      {/* Share Loading */}
       {shareLoading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600" />
         </div>
       )}
