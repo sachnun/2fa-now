@@ -262,96 +262,101 @@ function TOTPCard({
 
   return (
     <div className="group relative cursor-pointer rounded-2xl bg-zinc-100 p-4 transition-all duration-200 hover:bg-zinc-200/80 active:scale-[0.98] dark:bg-zinc-900 dark:hover:bg-zinc-800/90 dark:hover:shadow-lg dark:hover:shadow-zinc-900/50">
-      {deleteConfirm ? (
-        <div className="absolute right-2 top-2 flex items-center gap-1 z-10">
-          <span className="text-xs text-zinc-500">Delete?</span>
-          <button
-            onClick={() => { setDeleteConfirm(false); onRemove(); }}
-            className="p-1 text-red-500 hover:text-red-400"
-          >
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M20 6L9 17l-5-5" />
-            </svg>
-          </button>
-          <button
-            onClick={() => setDeleteConfirm(false)}
-            className="p-1 text-zinc-500 hover:text-zinc-400"
-          >
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      ) : (
-        <div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 transition-opacity sm:group-hover:opacity-100 z-10">
-          {isLoggedIn && (
-            <button
+      {/* Top row: label + actions */}
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          {isEditing ? (
+            <input
+              ref={editInputRef}
+              type="text"
+              value={editLabel}
+              onChange={(e) => setEditLabel(e.target.value)}
+              onBlur={handleSaveLabel}
+              onKeyDown={handleKeyDown}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full bg-transparent text-xs text-zinc-400 outline-none border-b border-zinc-600 focus:border-zinc-400"
+            />
+          ) : (
+            <div
+              className="group/label text-xs text-zinc-500 active:text-zinc-300 hover:text-zinc-300 inline-flex items-center gap-1 truncate max-w-full cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
-                if (entry.shareToken) {
-                  onRevokeShare();
-                } else {
-                  onShare();
-                }
+                setIsEditing(true);
               }}
-              className={`cursor-pointer p-1 transition-colors ${
-                entry.shareToken
-                  ? "text-green-500 hover:text-green-400"
-                  : "text-zinc-600 hover:text-zinc-400"
-              }`}
-              title={entry.shareToken ? "Sharing active" : "Share OTP"}
             >
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              <span className="truncate">{entry.label}</span>
+              <svg className="h-2.5 w-2.5 shrink-0 opacity-0 transition-opacity group-hover/label:opacity-100 group-active/label:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+              </svg>
+            </div>
+          )}
+        </div>
+        {deleteConfirm ? (
+          <div className="flex shrink-0 items-center gap-1">
+            <span className="text-xs text-zinc-500">Delete?</span>
+            <button
+              onClick={() => { setDeleteConfirm(false); onRemove(); }}
+              className="p-1 text-red-500 hover:text-red-400"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 6L9 17l-5-5" />
               </svg>
             </button>
-          )}
-          <button
-            onClick={() => setDeleteConfirm(true)}
-            className="cursor-pointer p-1 text-zinc-600 hover:text-zinc-400"
-          >
-            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      )}
+            <button
+              onClick={() => setDeleteConfirm(false)}
+              className="p-1 text-zinc-500 hover:text-zinc-400"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        ) : (
+          <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity sm:group-hover:opacity-100">
+            {isLoggedIn && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (entry.shareToken) {
+                    onRevokeShare();
+                  } else {
+                    onShare();
+                  }
+                }}
+                className={`cursor-pointer p-1 transition-colors ${
+                  entry.shareToken
+                    ? "text-green-500 hover:text-green-400"
+                    : "text-zinc-600 hover:text-zinc-400"
+                }`}
+                title={entry.shareToken ? "Sharing active" : "Share OTP"}
+              >
+                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                </svg>
+              </button>
+            )}
+            <button
+              onClick={(e) => { e.stopPropagation(); setDeleteConfirm(true); }}
+              className="cursor-pointer p-1 text-zinc-600 hover:text-zinc-400"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+      </div>
+      {/* OTP code */}
       <button
         onClick={() => onCopy(code)}
         className="w-full cursor-pointer text-left"
       >
-        {isEditing ? (
-          <input
-            ref={editInputRef}
-            type="text"
-            value={editLabel}
-            onChange={(e) => setEditLabel(e.target.value)}
-            onBlur={handleSaveLabel}
-            onKeyDown={handleKeyDown}
-            onClick={(e) => e.stopPropagation()}
-            className="mb-1 w-full bg-transparent text-xs text-zinc-400 outline-none border-b border-zinc-600 focus:border-zinc-400"
-          />
-        ) : (
-          <div
-            className="group/label mb-0.5 text-xs text-zinc-500 active:text-zinc-300 hover:text-zinc-300 inline-flex items-center gap-1 truncate max-w-[80%]"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsEditing(true);
-            }}
-          >
-            <span className="truncate">{entry.label}</span>
-            <svg className="h-2.5 w-2.5 shrink-0 opacity-0 transition-opacity group-hover/label:opacity-100 group-active/label:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-            </svg>
-          </div>
-        )}
-        <div className="font-mono text-2xl font-bold tracking-widest text-white">
+        <div className={`font-mono text-2xl font-bold tracking-widest transition-colors duration-300 ${
+          copied ? "text-green-400" : "text-zinc-900 dark:text-white"
+        }`}>
           {code.slice(0, 3)} {code.slice(3)}
         </div>
-        {copied && (
-          <div className="mt-0.5 text-xs text-zinc-400">Copied</div>
-        )}
       </button>
     </div>
   );
