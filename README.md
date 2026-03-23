@@ -14,14 +14,13 @@ cd 2fa-now
 npm install
 ```
 
-Configure `.env`:
+Configure environment variables:
 
-```env
-DATABASE_URL="postgresql://[USER]:[PASSWORD]@[HOST]/[DATABASE]?sslmode=require"
-AUTH_SECRET="your-random-secret-key"
-AUTH_GITHUB_ID="your-github-client-id"
-AUTH_GITHUB_SECRET="your-github-client-secret"
+```bash
+cp .env.example .env
 ```
+
+Then edit `.env` with your actual values.
 
 Run:
 
